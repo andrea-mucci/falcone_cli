@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: goreleaser
+
+on:
+    push:
+        tags:
+            - v*.*.*
+jobs:
+    goreleaser:
+        # test
+        runs-on: ubuntu-latest
