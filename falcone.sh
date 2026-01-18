@@ -56,8 +56,14 @@ if [ "$os" = "Linux" ]; then
     if [[ "$ACTIONS" == "Docker Install" ]]; then
         if has_docker; then
             gum confirm "Install API Gateway?" && {
-                gum spin -s monkey --show-output --title "Run APISIX" -- bash "${script_folder}/docker/apisix.sh"
+                gum spin -s monkey --show-output --title "Install..." -- bash "${script_folder}/docker/apisix.sh"
             }
+            gum confirm "Install KeyCloak?" && {
+                gum spin -s monkey --show-output --title "Install..." -- bash "${script_folder}/docker/keycloak.sh"
+            }
+            gum confirm "Install KeyCloak?" && {
+                            gum spin -s monkey --show-output --title "Install..." -- bash "${script_folder}/docker/keycloak.sh"
+                        }
         else
             case $? in
               1) gum style --foreground 1 "✗ Docker no está instalado (no existe 'docker' en PATH)" ;;
