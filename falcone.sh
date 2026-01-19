@@ -1,26 +1,13 @@
 #!/bin/bash
-has_docker() {
-  # 1) ¿Existe el binario?
-  command -v docker >/dev/null 2>&1 || return 1
+. ./scripts/versions.sh
+. ./scripts/utils.sh
+INSTALLATION_TYPE="NotConfigured"
+SYSTEMS_INSTALLED=()
 
-  # 2) ¿Responde el daemon? (opcional pero útil)
-  docker info >/dev/null 2>&1 || return 2
-
-  return 0
-}
-no_dependency() {
-    command -v curl >/dev/null 2>&1 || return 0
-    command -v wget >/dev/null 2>&1 || return 0
-    command -v git >/dev/null 2>&1 || return 0
-    return 1
-}
-no_gum() {
-    command -v gum >/dev/null 2>&1 || return 0
-    return 1
-}
 # variables
 os=$(uname)
 RED="\e[31m"
+
 # check if is sudo
 if [[ $EUID -ne 0 ]]; then
    echo -e "${RED}This script must be run as root${ENDCOLOR}"
@@ -34,7 +21,7 @@ if [ "$os" = "Linux" ]; then
         os_system="debian"
     fi
     script_folder="./scripts"
-    echo -e "${RED}Wait please...${ENDCOLOR}"
+    echo -e "${RED}Please Wait...${ENDCOLOR}"
 
 
     # install system dependencies
@@ -51,19 +38,22 @@ if [ "$os" = "Linux" ]; then
     'Falcone CLI (1¢)' 'So sweet and so fresh!'
 
     gum style --foreground 2 "Installation:"
-    DOCKER_INSTALL="Docker Install"; STANDALONE_INSTALL="Standalone Install";
-    ACTIONS=$(gum choose "$DOCKER_INSTALL" "$STANDALONE_INSTALL")
+    DOCKER_INSTALL="Docker Install"; STANDALONE_INSTALL="Standalone Install"; START_SYSTEMS="Start Falcone";
+    ACTIONS=$(gum choose "$DOCKER_INSTALL" "$STANDALONE_INSTALL" "$START_SYSTEMS")
     if [[ "$ACTIONS" == "Docker Install" ]]; then
+        INSTALLATION_TYPE="docker"
         if has_docker; then
             gum confirm "Install API Gateway?" && {
+                SYSTEMS_INSTALLED+=("apisix")
                 gum spin -s monkey --show-output --title "Install..." -- bash "${script_folder}/docker/apisix.sh"
+            }
+            gum confirm "Install KeyCloak?" && {
+                SYSTEMS_INSTALLED+=("keycloak")
+                gum spin -s monkey --show-output --title "Install..." -- bash "${script_folder}/docker/keycloak.sh"
             }
             gum confirm "Install KeyCloak?" && {
                 gum spin -s monkey --show-output --title "Install..." -- bash "${script_folder}/docker/keycloak.sh"
             }
-            gum confirm "Install KeyCloak?" && {
-                            gum spin -s monkey --show-output --title "Install..." -- bash "${script_folder}/docker/keycloak.sh"
-                        }
         else
             case $? in
               1) gum style --foreground 1 "✗ Docker no está instalado (no existe 'docker' en PATH)" ;;
@@ -71,10 +61,23 @@ if [ "$os" = "Linux" ]; then
             esac
         fi
     elif [[  "$ACTIONS" == "Standalone Install" ]]; then
+        INSTALLATION_TYPE="standalone"
         gum confirm "Install API Gateway?" && {
             gum spin -s monkey --title "Install ETCD" -- bash ."${script_folder}/etcd.sh"
             gum spin -s monkey --title "Install APISIX" -- bash ."${script_folder}/apisix.sh"
         }
+    elif [[  "$ACTIONS" == "Start Falcone" ]]; then
+            if [[  "$INSTALLATION_TYPE" == "docker" ]]; then
+              gum confirm "Start Systems, please wait?" && {
+                for i in "${SYSTEMS_INSTALLED[@]}"; do
+                  if [[  "$i" == "apisix" ]]; then
+                    gum spin -s monkey --title "Start ETCD" --
+                  fi
+                done
+                  gum spin -s monkey --title "Install ETCD" -- bash ."${script_folder}/etcd.sh"
+                  gum spin -s monkey --title "Install APISIX" -- bash ."${script_folder}/apisix.sh"
+              }
+            fi
     fi
 else
     echo -e "${RED}Unsupported OS${ENDCOLOR}"
