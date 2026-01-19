@@ -1,12 +1,27 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-name: goreleaser
+name: Create Release
 
 on:
     push:
         tags:
             - v*.*.*
 jobs:
-    goreleaser:
-        # test
-        runs-on: ubuntu-latest
+    build:
+      name: Create Release
+      runs-on: ubuntu-latest
+      steps:
+        - name: Update System
+          run: sudo apt update && sudo apt install tar gzip
+        - name: Checkout code
+          uses: actions/checkout@v4
+        - name: Compress Cli
+          run: tar -czvf falcone_cli.tar.gz falcone.sh
+        - name: Compress Folder Scripts and Configuration Folder
+          run: tar -czvf scripts.tar.gz conf/ scripts/
+        - name: Release
+          uses: softprops/action-gh-release@v2
+          with:
+            files: |
+              falcone_cli.tar.gz
+              scripts.tar.gz
