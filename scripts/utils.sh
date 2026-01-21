@@ -28,3 +28,7 @@ no_gum() {
     command -v gum >/dev/null 2>&1 || return 0
     return 1
 }
+no_dasel() {
+    command -v dasel >/dev/null 2>&1 || return 0
+    return 1
+}
