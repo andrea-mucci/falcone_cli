@@ -23,29 +23,16 @@ if [ "$os" = "Linux" ]; then
     fi
     script_folder="./scripts"
     echo -e "${RED}Please Wait...${ENDCOLOR}"
-
-
-    # install system dependencies
-    if no_dependency; then
-        bash "${script_folder}/installer/${os_system}/deps.sh" >/dev/null 2>&1
-    fi
-    if no_gum; then
-        # install gum
-        bash "${script_folder}/installer/${os_system}/gum.sh" >/dev/null 2>&1
-    fi
-    if no_dasel; then
-        # install dasel
-        bash "${script_folder}/installer/${os_system}/dasel.sh" >/dev/null 2>&1
-    fi
-    gum style \
-    --foreground 212 --border-foreground 212 --border double \
-    --align center --width 50 --margin "1 2" --padding "2 4" \
-    'Falcone CLI (1¢)' 'So sweet and so fresh!'
+#    gum style \
+#    --foreground 212 --border-foreground 212 --border double \
+#    --align center --width 50 --margin "1 2" --padding "2 4" \
+#    'Falcone CLI (1¢)' 'So sweet and so fresh!'
     if [[ -f "${HOME}/.falcone_config/$CONF_FILE" ]]; then
       echo "$CONF_FILE exists."
     else
       mkdir "${HOME}/.falcone_config"
       touch "${HOME}/.falcone_config/$CONF_FILE"
+      bash "${script_folder}/installer/${os_system}/installer.sh"
       dasel -i toml --root 'installation = "started"' < "${HOME}/.falcone_config/$CONF_FILE" > "${HOME}/.falcone_config/$CONF_FILE.tmp" && mv "${HOME}/.falcone_config/$CONF_FILE.tmp" "${HOME}/.falcone_config/$CONF_FILE"
     fi
     gum style --foreground 2 "Installation:"
